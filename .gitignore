@@ -27,6 +27,9 @@ depends/*.*
 .pydevproject
 .project
 
+# Ignore mac .DS_Store
+.DS_Store
+
 # Ignore vi(m) swap files
 *.swp
 
