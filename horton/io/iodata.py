@@ -86,6 +86,16 @@ class ArrayTypeCheckDescriptor(object):
             return getattr(obj, '_' + self._default).astype(self._dtype)
         return getattr(obj, '_' + self._name)
 
+    def __get__(self, obj, type=None):
+        if obj is None:
+            return self
+        if self._default is not None and not hasattr(obj, '_' + self._name):
+            #I added the next line, it works, but is it a good idea/desirable?
+            setattr(obj, '_' + self._name,(getattr(obj, '_' + self._default).astype(self._dtype)))
+            # this was the original:
+            #return getattr(obj, '_' + self._default).astype(self._dtype)
+        return getattr(obj, '_' + self._name)
+
     def __set__(self, obj, value):
         # try casting to proper dtype:
         value = np.array(value, dtype=self._dtype, copy=False)

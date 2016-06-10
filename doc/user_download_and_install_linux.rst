@@ -184,6 +184,20 @@ dependencies on Linux distributions that have outdated packages:
 
 .. _linux_compile_install:
 
+Reference atoms
+===============
+
+This step can be skipped when compiling a stable release because each stable
+release already contains reference atoms.
+
+Several parts of Horton make use of reference atomic computations. These files
+are too large to be included in the git revision system. Therefore, they must be
+downloaded separately when compiling a development version of Horton::
+
+    cd data/refatoms
+    make all
+    cd ../..
+
 Compilation and installation
 ============================
 
