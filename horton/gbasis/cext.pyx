@@ -192,86 +192,79 @@ def gob_pure_normalization(double alpha, long l):
 
 cdef class GBasis:
     """
-       This class describes basis sets applied to a certain molecular structure.
+    This class describes basis sets applied to a certain molecular structure.
 
-       **Arguments:**
+    Parameters
+    ----------
+    centers : numpy-array, shape = (ncenter, 3)
+        A numpy array with centers for the basis functions.
+    shell_map : array of int, shape = (nshell,)
+        An array with the center index for each shell.
+    nprims : array of int, shape = (nshell,)
+        The number of primitives in each shell.
+    shell_types : array of int, shape = (nshell,)
+        An array with contraction types: 0 = S, 1 = P, 2 = Cartesian D,
+        3 = Cartesian F, ..., -2 = pure D, -3 = pure F, ...
+        shape = (nshell,)
+    alphas : array of float, shape = (sum(nprims),)
+        The exponents of the primitives in one shell.
+    con_coeffs : array of float, shape = (sum(nprims),)
+        The contraction coefficients of the primitives for each
+        contraction in a contiguous array. The coefficients are ordered
+        according to the shells. Within each shell, the coefficients are
+        grouped per exponent.
 
-       centers
-            A numpy array with centers for the basis functions.
-            shape = (ncenter, 3)
 
-       shell_map
-            An array with the center index for each shell.
-            shape = (nshell,)
+    Notes
+    -----
+    All arguments may also be lists. In any case, copies are made of the
+    arguments and stored internally, and are not meant to be modified once
+    the GOBasis object is created.
 
-       nprims
-            The number of primitives in each shell.
-            shape = (nshell,)
+    The order of the pure shells is based on the order of real spherical.
+    The functions are sorted from low to high magnetic quantum number,
+    with cosine-like functions before the sine-like functions. The order
+    of functions in a Cartesian shell is alhpabetic. Some examples:
 
-       shell_types
-            An array with contraction types: 0 = S, 1 = P, 2 = Cartesian D,
-            3 = Cartesian F, ..., -2 = pure D, -3 = pure F, ...
-            shape = (nshell,)
-
-       alphas
-            The exponents of the primitives in one shell.
-            shape = (sum(nprims),)
-
-       con_coeffs
-            The contraction coefficients of the primitives for each
-            contraction in a contiguous array. The coefficients are ordered
-            according to the shells. Within each shell, the coefficients are
-            grouped per exponent.
-            shape = (sum(nprims),)
-
-       All arguments may also be lists. In any case, copies are made of the
-       arguments and stored internally, and are not meant to be modified once
-       the GOBasis object is created.
-
-       The order of the pure shells is based on the order of real spherical.
-       The functions are sorted from low to high magnetic quantum number,
-       with cosine-like functions before the sine-like functions. The order
-       of functions in a Cartesian shell is alhpabetic. Some examples:
-
-       shell_type = 0, S:
-         0 -> 1
-       shell_type = 1, P:
-         0 -> x
-         1 -> y
-         2 -> z
-       shell_type = 2, Cartesian D:
-         0 -> xx
-         1 -> xy
-         2 -> xz
-         3 -> yy
-         4 -> yz
-         5 -> zz
-       shell_type = 3, Cartesian F:
-         0 -> xxx
-         1 -> xxy
-         2 -> xxz
-         3 -> xyy
-         4 -> xyz
-         5 -> xzz
-         6 -> yyy
-         7 -> yyz
-         8 -> yzz
-         9 -> zzz
-       shell_type = -1, not allowed
-       shell_type = -2, pure D:
-         0 -> zz
-         1 -> xz
-         2 -> yz
-         3 -> xx-yy
-         4 -> xy
-       shell_type = -3, pure F:
-         0 -> zzz
-         1 -> xzz
-         2 -> yzz
-         3 -> xxz-yyz
-         4 -> xyz
-         5 -> xxx-3xyy
-         6 -> 3xxy-yyy
+    shell_type = 0, S:
+      0 -> 1
+    shell_type = 1, P:
+      0 -> x
+      1 -> y
+      2 -> z
+    shell_type = 2, Cartesian D:
+      0 -> xx
+      1 -> xy
+      2 -> xz
+      3 -> yy
+      4 -> yz
+      5 -> zz
+    shell_type = 3, Cartesian F:
+      0 -> xxx
+      1 -> xxy
+      2 -> xxz
+      3 -> xyy
+      4 -> xyz
+      5 -> xzz
+      6 -> yyy
+      7 -> yyz
+      8 -> yzz
+      9 -> zzz
+    shell_type = -1, not allowed
+    shell_type = -2, pure D:
+      0 -> zz
+      1 -> xz
+      2 -> yz
+      3 -> xx-yy
+      4 -> xy
+    shell_type = -3, pure F:
+      0 -> zzz
+      1 -> xzz
+      2 -> yzz
+      3 -> xxz-yyz
+      4 -> xyz
+      5 -> xxx-3xyy
+      6 -> 3xxy-yyy
     """
 
     cdef gbasis.GBasis* _this
@@ -355,8 +348,16 @@ cdef class GBasis:
     def concatenate(cls, *gbs):
         '''Concatenate multiple basis objects into a new one.
 
-           **Arguments:** each argument is an instance of the same subclass of
-           GBasis.
+        Parameters
+        ----------
+        ``GBasis`` instance
+            each argument is an instance of the same subclass of GBasis.
+
+        Returns
+        -------
+        ``GBasis`` instance
+            An instance of the same (sub)class containing the concatenated
+            basis objects into a new one
         '''
         # check if the classes match
         for gb in gbs:
@@ -509,14 +510,17 @@ cdef class GBasis:
     def get_subset(self, ishells):
         '''Construct a sub basis set for a selection of shells
 
-           **Argument:**
+        Parameters
+        ----------
+        ishells : list of int
+            A list of indexes of shells to be retained in the sub basis set
 
-           ishells
-                A list of indexes of shells to be retained in the sub basis set
-
-           **Returns:** An instance of the same class as self containing only
-           the basis functions of self that correspond to the select shells in
-           the ``ishells`` list.
+        Returns
+        -------
+        ``GBasis`` instance
+            An instance of the same class as self containing only
+            the basis functions of self that correspond to the select shells in
+            the ``ishells`` list.
         '''
         # find the centers corresponding to ishells
         icenters = set([])
@@ -563,22 +567,25 @@ cdef class GBasis:
     def get_basis_atoms(self, coordinates):
         '''Return a list of atomic basis sets for a given geometry
 
-           **Arguments:**
+        Parameters
+        ----------
+        coordinates : float array, shape = (N, 3)
+            An (N, 3) array with atomic coordinates, used to find the
+            centers associated with atoms. An exact match of the Cartesian
+            coordinates is required to properly select a shell.
 
-           coordinates
-                An (N, 3) array with atomic coordinates, used to find the
-                centers associated with atoms. An exact match of the Cartesian
-                coordinates is required to properly select a shell.
+        Returns
+        -------
+        list of tuples
+            A list with one tuple for every atom: (gbasis,
+            ibasis_list), where gbasis is a basis set object for the atom and
+            ibasis_list is a list of basis set indexes that can be used to
+            substitute results from the atomic basis set back into the molecular
+            basis set. For example, when a density matrix for the atom is
+            obtained and it needs to be plugged back into the molecular density
+            matrix, one can do the following::
 
-           **Returns:** A list with one tuple for every atom: (gbasis,
-           ibasis_list), where gbasis is a basis set object for the atom and
-           ibasis_list is a list of basis set indexes that can be used to
-           substitute results from the atomic basis set back into the molecular
-           basis set. For example, when a density matrix for the atom is
-           obtained and it needs to be plugged back into the molecular density
-           matrix, one can do the following::
-
-               mol_dm._array[ibasis_list,ibasis_list.reshape(-1,1)] = atom_dm._array
+                mol_dm._array[ibasis_list,ibasis_list.reshape(-1,1)] = atom_dm._array
         '''
         result = []
         for c in coordinates:
@@ -634,15 +641,18 @@ cdef class GOBasis(GBasis):
     def compute_overlap(self, output):
         """Compute the overlap integrals in a Gaussian orbital basis
 
-           **Arguments:**
+        Parameters
+        ----------
+        output : ``TwoIndex`` or ``LinalgFactory`` object
+            When a ``TwoIndex`` instance is given, it is used as output argument and its
+            contents are overwritten. When ``LinalgFactory`` is given, it is used to
+            construct the output ``TwoIndex`` object. In both cases, the output two-index
+            object is returned.
 
-           output
-                When a ``TwoIndex`` instance is given, it is used as output
-                argument and its contents are overwritten. When ``LinalgFactory``
-                is given, it is used to construct the output ``TwoIndex``
-                object. In both cases, the output two-index object is returned.
-
-           **Returns:** ``TwoIndex`` object
+        Returns
+        -------
+        output : ``TwoIndex`` object
+            The values of the integrals.
         """
         # prepare the output array
         cdef np.ndarray[double, ndim=2] output_array
@@ -659,15 +669,18 @@ cdef class GOBasis(GBasis):
     def compute_kinetic(self, output):
         """Compute the kinetic energy integrals in a Gaussian orbital basis
 
-           **Arguments:**
+        Parameters
+        ----------
+        output : ``TwoIndex`` or ``LinalgFactory`` object
+            When a ``TwoIndex`` instance is given, it is used as output argument and its
+            contents are overwritten. When ``LinalgFactory`` is given, it is used to
+            construct the output ``TwoIndex`` object. In both cases, the output two-index
+            object is returned.
 
-           output
-                When a ``TwoIndex`` instance is given, it is used as output
-                argument and its contents are overwritten. When ``LinalgFactory``
-                is given, it is used to construct the output ``TwoIndex``
-                object. In both cases, the output two-index object is returned.
-
-           **Returns:** ``TwoIndex`` object
+        Returns
+        -------
+        output : ``TwoIndex`` object
+            The values of the integrals.
         """
         # prepare the output array
         cdef np.ndarray[double, ndim=2] output_array
@@ -687,23 +700,23 @@ cdef class GOBasis(GBasis):
                                    output):
         """Compute the nuclear attraction integral in a Gaussian orbital basis
 
-           **Arguments:**
+        Parameters
+        ----------
+        coordinates : float array, shape = (ncharge,3)
+            A float array with shape (ncharge,3) with Cartesian coordinates
+            of point charges that define the external field.
+        charges : float array, shape = (ncharge,)
+            A float array with shape (ncharge,) with the values of the charges.
+        output : ``TwoIndex`` or ``LinalgFactory`` object
+            When a ``TwoIndex`` instance is given, it is used as output argument and its
+            contents are overwritten. When ``LinalgFactory`` is given, it is used to
+            construct the output ``TwoIndex`` object. In both cases, the output two-index
+            object is returned.
 
-           coordinates
-                A float array with shape (ncharge,3) with Cartesian coordinates
-                of point charges that define the external field.
-
-           charges
-                A float array with shape (ncharge,) with the values of the
-                charges.
-
-           output
-                When a ``TwoIndex`` instance is given, it is used as output
-                argument and its contents are overwritten. When ``LinalgFactory``
-                is given, it is used to construct the output ``TwoIndex``
-                object. In both cases, the output two-index object is returned.
-
-           **Returns:** ``TwoIndex`` object
+        Returns
+        -------
+        output : ``TwoIndex`` object
+            The values of the integrals.
         """
         # type checking
         assert coordinates.flags['C_CONTIGUOUS']
@@ -772,19 +785,21 @@ cdef class GOBasis(GBasis):
     def compute_electron_repulsion(self, output):
         '''Compute electron-electron repulsion integrals
 
-           **Argument:**
+        Parameters
+        ----------
+        output : ``DenseFourIndex``, ``DenseLinalgFactory`` or ``CholeskyLinalgFactory`` object
+            When a ``DenseFourIndex`` object is given, it is used as output
+            argument and its contents are overwritten. When a
+            ``DenseLinalgFactory`` or ``CholeskyLinalgFactory`` is given, it
+            is used to construct the four-index object in which the
+            integrals are stored.
 
-           output
-                When a ``DenseFourIndex`` object is given, it is used as output
-                argument and its contents are overwritten. When a
-                ``DenseLinalgFactory`` or ``CholeskyLinalgFactory`` is given, it
-                is used to construct the four-index object in which the
-                integrals are stored.
+        Returns
+        -------
+        output : four-index object
+            The values of the integrals.
 
-           **Returns:** The four-index object with the electron repulsion
-           integrals.
-
-           Keywords: :index:`ERI`, :index:`four-center integrals`
+        Keywords: :index:`ERI`, :index:`four-center integrals`
         '''
         log.cite('valeev2014', 'the efficient implementation of four-center electron repulsion integrals')
         # prepare the output array
